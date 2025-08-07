@@ -385,4 +385,62 @@ describe("ChargesService", () => {
       expect(result).toEqual(filteredCharges);
     });
   });
+
+  describe("findChargeById", () => {
+    it("should retrieve a charge by id", async () => {
+      const mockCharge = {
+        id: "charge-1",
+        subscriptionId: "sub-1",
+        amount: 100,
+        chargeDate: new Date("2025-08-10"),
+        status: "pending",
+        description: "Monthly subscription",
+        attempts: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        subscription: {
+          id: "sub-1",
+          customerId: "cust-1",
+          customer: {
+            id: "cust-1",
+            name: "Customer 1",
+            email: "customer1@example.com",
+          },
+          plan: { id: "plan-1", name: "Basic Plan" },
+        },
+        payments: [],
+      };
+
+      jest
+        .spyOn(prismaService.charge, "findUnique")
+        .mockResolvedValue(mockCharge as any);
+
+      const result = await service.findChargeById("charge-1");
+
+      expect(prismaService.charge.findUnique).toHaveBeenCalledWith({
+        where: { id: "charge-1" },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+          payments: true,
+        },
+      });
+      expect(result).toEqual(mockCharge);
+    });
+
+    it("should throw NotFoundException if charge does not exist", async () => {
+      jest.spyOn(prismaService.charge, "findUnique").mockResolvedValue(null);
+
+      await expect(service.findChargeById("non-existent-id")).rejects.toThrow(
+        NotFoundException
+      );
+      await expect(service.findChargeById("non-existent-id")).rejects.toThrow(
+        "Charge not found"
+      );
+    });
+  });
 });
