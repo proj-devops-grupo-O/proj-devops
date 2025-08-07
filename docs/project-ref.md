@@ -36,11 +36,17 @@ Planejamento: Backend de Gerenciador de Assinaturas (PMEs)
 - GET /cobrancas - listar cobrancas (filtro por status ou cliente)
 - POST /cobrancas/:id/pagar - simular pagamento
 ---
-## 3. Simulador de Agendamento de Cobranca
-- Script que roda diariamente (ou manualmente):
- - Percorre assinaturas ativas
- - Gera nova cobranca se hoje >= proxima_cobranca
- - Atualiza proxima_cobranca para o ms seguinte
+## 3. Simulador de Agendamento de Cobrança
+
+### Funcionalidade Principal
+O sistema implementa um mecanismo automatizado de agendamento de cobranças com notificações programadas.
+
+### Fluxo de Processamento
+1. **Criação da Cobrança**: Ao gerar uma nova cobrança, o sistema define automaticamente uma data de vencimento baseada na assinatura
+2. **Agendamento de Jobs**: O sistema agenda jobs assíncronos para execução na data de vencimento
+3. **Notificações Automatizadas**: No momento do vencimento, o sistema dispara:
+   - **E-mail**: Notificação detalhada com informações da cobrança
+   - **SMS**: Lembrete conciso sobre o vencimento
 ---
 ## 4. Simulaco de Notificaces
 - Ao gerar uma cobranca -> simula envio de e-mail
