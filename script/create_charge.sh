@@ -1,1 +1,1 @@
-curl -X POST http://localhost:3001/api/charges -H "Content-Type: application/json" -d '{"subscriptionId": "subscription_1", "amount": 29.90, "chargeDate": "2025-08-06T12:56:42-03:00", "description": "Test charge due in 2 minutes"}' -v
+curl -X POST http://localhost:3001/api/charges -H "Content-Type: application/json" -d '{"subscriptionId": "subscription_1", "amount": 29.90, "chargeDate": "2025-08-06T12:56:42-03:00", "description": "Test charge due now"}' -v
