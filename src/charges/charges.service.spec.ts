@@ -200,4 +200,189 @@ describe("ChargesService", () => {
       );
     });
   });
+
+  describe("findCharges", () => {
+    const mockCharges = [
+      {
+        id: "charge-1",
+        subscriptionId: "sub-1",
+        amount: 100,
+        chargeDate: new Date("2025-08-10"),
+        status: "pending",
+        description: "Monthly subscription",
+        attempts: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        subscription: {
+          id: "sub-1",
+          customerId: "cust-1",
+          customer: {
+            id: "cust-1",
+            name: "Customer 1",
+            email: "customer1@example.com",
+          },
+          plan: { id: "plan-1", name: "Basic Plan" },
+        },
+      },
+      {
+        id: "charge-2",
+        subscriptionId: "sub-2",
+        amount: 200,
+        chargeDate: new Date("2025-08-11"),
+        status: "paid",
+        description: "Annual subscription",
+        attempts: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        subscription: {
+          id: "sub-2",
+          customerId: "cust-2",
+          customer: {
+            id: "cust-2",
+            name: "Customer 2",
+            email: "customer2@example.com",
+          },
+          plan: { id: "plan-2", name: "Premium Plan" },
+        },
+      },
+    ];
+
+    it("should retrieve all charges when no filters are provided", async () => {
+      jest
+        .spyOn(prismaService.charge, "findMany")
+        .mockResolvedValue(mockCharges);
+
+      const result = await service.findCharges();
+
+      expect(prismaService.charge.findMany).toHaveBeenCalledWith({
+        where: {},
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+        orderBy: {
+          chargeDate: "desc",
+        },
+      });
+      expect(result).toEqual(mockCharges);
+    });
+
+    it("should filter charges by status", async () => {
+      const pendingCharges = [mockCharges[0]];
+      jest
+        .spyOn(prismaService.charge, "findMany")
+        .mockResolvedValue(pendingCharges);
+
+      const result = await service.findCharges({ status: "pending" });
+
+      expect(prismaService.charge.findMany).toHaveBeenCalledWith({
+        where: { status: "pending" },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+        orderBy: {
+          chargeDate: "desc",
+        },
+      });
+      expect(result).toEqual(pendingCharges);
+    });
+
+    it("should filter charges by subscriptionId", async () => {
+      const filteredCharges = [mockCharges[0]];
+      jest
+        .spyOn(prismaService.charge, "findMany")
+        .mockResolvedValue(filteredCharges);
+
+      const result = await service.findCharges({ subscriptionId: "sub-1" });
+
+      expect(prismaService.charge.findMany).toHaveBeenCalledWith({
+        where: { subscriptionId: "sub-1" },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+        orderBy: {
+          chargeDate: "desc",
+        },
+      });
+      expect(result).toEqual(filteredCharges);
+    });
+
+    it("should filter charges by customerId", async () => {
+      const filteredCharges = [mockCharges[0]];
+      jest
+        .spyOn(prismaService.charge, "findMany")
+        .mockResolvedValue(filteredCharges);
+
+      const result = await service.findCharges({ customerId: "cust-1" });
+
+      expect(prismaService.charge.findMany).toHaveBeenCalledWith({
+        where: {
+          subscription: {
+            customerId: "cust-1",
+          },
+        },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+        orderBy: {
+          chargeDate: "desc",
+        },
+      });
+      expect(result).toEqual(filteredCharges);
+    });
+
+    it("should apply multiple filters when provided", async () => {
+      const filteredCharges = [mockCharges[0]];
+      jest
+        .spyOn(prismaService.charge, "findMany")
+        .mockResolvedValue(filteredCharges);
+
+      const result = await service.findCharges({
+        status: "pending",
+        customerId: "cust-1",
+        subscriptionId: "sub-1",
+      });
+
+      expect(prismaService.charge.findMany).toHaveBeenCalledWith({
+        where: {
+          status: "pending",
+          subscriptionId: "sub-1",
+          subscription: {
+            customerId: "cust-1",
+          },
+        },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+        orderBy: {
+          chargeDate: "desc",
+        },
+      });
+      expect(result).toEqual(filteredCharges);
+    });
+  });
 });
