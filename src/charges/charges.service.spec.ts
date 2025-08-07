@@ -443,4 +443,155 @@ describe("ChargesService", () => {
       );
     });
   });
+
+  describe("updateCharge", () => {
+    const mockCharge = {
+      id: "charge-1",
+      subscriptionId: "sub-1",
+      amount: 100,
+      chargeDate: new Date("2025-08-10"),
+      status: "pending",
+      description: "Monthly subscription",
+      attempts: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      subscription: {
+        id: "sub-1",
+        customerId: "cust-1",
+        customer: {
+          id: "cust-1",
+          name: "Customer 1",
+          email: "customer1@example.com",
+        },
+        plan: { id: "plan-1", name: "Basic Plan" },
+      },
+      payments: [],
+    };
+
+    beforeEach(() => {
+      jest
+        .spyOn(service, "findChargeById")
+        .mockResolvedValue(mockCharge as any);
+    });
+
+    it("should update charge status", async () => {
+      const updatedCharge = {
+        ...mockCharge,
+        status: "paid",
+        updatedAt: new Date(),
+      };
+
+      jest
+        .spyOn(prismaService.charge, "update")
+        .mockResolvedValue(updatedCharge as any);
+
+      const result = await service.updateCharge("charge-1", { status: "paid" });
+
+      expect(service.findChargeById).toHaveBeenCalledWith("charge-1");
+      expect(prismaService.charge.update).toHaveBeenCalledWith({
+        where: { id: "charge-1" },
+        data: {
+          status: "paid",
+          updatedAt: expect.any(Date),
+        },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+      });
+      expect(result).toEqual(updatedCharge);
+    });
+
+    it("should update charge description", async () => {
+      const updatedCharge = {
+        ...mockCharge,
+        description: "Updated description",
+        updatedAt: new Date(),
+      };
+
+      jest
+        .spyOn(prismaService.charge, "update")
+        .mockResolvedValue(updatedCharge as any);
+
+      const result = await service.updateCharge("charge-1", {
+        description: "Updated description",
+      });
+
+      expect(service.findChargeById).toHaveBeenCalledWith("charge-1");
+      expect(prismaService.charge.update).toHaveBeenCalledWith({
+        where: { id: "charge-1" },
+        data: {
+          description: "Updated description",
+          updatedAt: expect.any(Date),
+        },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+      });
+      expect(result).toEqual(updatedCharge);
+    });
+
+    it("should update multiple fields", async () => {
+      const updatedCharge = {
+        ...mockCharge,
+        status: "paid",
+        description: "Payment received",
+        updatedAt: new Date(),
+      };
+
+      jest
+        .spyOn(prismaService.charge, "update")
+        .mockResolvedValue(updatedCharge as any);
+
+      const result = await service.updateCharge("charge-1", {
+        status: "paid",
+        description: "Payment received",
+      });
+
+      expect(service.findChargeById).toHaveBeenCalledWith("charge-1");
+      expect(prismaService.charge.update).toHaveBeenCalledWith({
+        where: { id: "charge-1" },
+        data: {
+          status: "paid",
+          description: "Payment received",
+          updatedAt: expect.any(Date),
+        },
+        include: {
+          subscription: {
+            include: {
+              customer: true,
+              plan: true,
+            },
+          },
+        },
+      });
+      expect(result).toEqual(updatedCharge);
+    });
+
+    it("should throw NotFoundException if charge does not exist", async () => {
+      jest
+        .spyOn(service, "findChargeById")
+        .mockRejectedValue(new NotFoundException("Charge not found"));
+
+      await expect(
+        service.updateCharge("non-existent-id", { status: "paid" })
+      ).rejects.toThrow(NotFoundException);
+
+      await expect(
+        service.updateCharge("non-existent-id", { status: "paid" })
+      ).rejects.toThrow("Charge not found");
+
+      expect(service.findChargeById).toHaveBeenCalledWith("non-existent-id");
+      expect(prismaService.charge.update).not.toHaveBeenCalled();
+    });
+  });
 });
