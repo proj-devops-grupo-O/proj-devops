@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  subscriptions ActiveSubscription[]
+
+  @@map("customers")
+}
+
+model Plan {
+  id          String @id @default(cuid())
+  name        String
+  price       Float
+  recurrence  String // "monthly", "yearly"
+  description String?
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  subscriptions ActiveSubscription[]
+
+  @@map("plans")
+}
+
+model ActiveSubscription {
+  id           String   @id @default(cuid())
+  customerId   String
+  planId       String
+  startDate    DateTime
+  status       String   // "active", "cancelled", "suspended"
+  nextBilling  DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  customer Customer @relation(fields: [customerId], references: [id])
+  plan     Plan     @relation(fields: [planId], references: [id])
+  charges  Charge[]
+
+  @@map("active_subscriptions")
+}
+
+model Charge {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  chargeDate     DateTime
+  amount         Float
+  status         String   // "pending", "paid", "overdue", "cancelled"
+  description    String?
+  attempts       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  subscription ActiveSubscription @relation(fields: [subscriptionId], references: [id])
+  payments     Payment[]
+
+  @@map("charges")
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  chargeId      String
+  paymentDate   DateTime
+  method        String   // "card", "pix", "bank_slip"
+  status        String   // "approved", "declined", "processing"
+  amountPaid    Float
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  charge Charge @relation(fields: [chargeId], references: [id])
+
+  @@map("payments")
+} 
