@@ -2,19 +2,19 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-} from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { CreateChargeDto } from "./dto/create-charge.dto";
-import { UpdateChargeDto } from "./dto/update-charge.dto";
-import { Queue } from "bullmq";
-import { InjectQueue } from "@nestjs/bullmq";
-import { EmailJobData } from "./interfaces";
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateChargeDto } from './dto/create-charge.dto';
+import { UpdateChargeDto } from './dto/update-charge.dto';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
+import { EmailJobData } from './interfaces';
 
 @Injectable()
 export class ChargesService {
   constructor(
     private prisma: PrismaService,
-    @InjectQueue("charges") private readonly chargesQueue: Queue
+    @InjectQueue('charges') private readonly chargesQueue: Queue,
   ) {}
 
   async createCharge(createChargeDto: CreateChargeDto) {
@@ -29,11 +29,11 @@ export class ChargesService {
     });
 
     if (!subscription) {
-      throw new NotFoundException("Subscription not found");
+      throw new NotFoundException('Subscription not found');
     }
 
-    if (subscription.status !== "active") {
-      throw new BadRequestException("Subscription is not active");
+    if (subscription.status !== 'active') {
+      throw new BadRequestException('Subscription is not active');
     }
 
     const finalChargeDate = chargeDate ? new Date(chargeDate) : new Date();
@@ -43,7 +43,7 @@ export class ChargesService {
         subscriptionId,
         amount,
         chargeDate: finalChargeDate,
-        status: "pending",
+        status: 'pending',
         description: description || `${subscription.plan.name} Charge`,
         attempts: 0,
       },
@@ -94,7 +94,7 @@ export class ChargesService {
         },
       },
       orderBy: {
-        chargeDate: "desc",
+        chargeDate: 'desc',
       },
     });
   }
@@ -114,7 +114,7 @@ export class ChargesService {
     });
 
     if (!charge) {
-      throw new NotFoundException("Charge not found");
+      throw new NotFoundException('Charge not found');
     }
 
     return charge;
@@ -151,10 +151,10 @@ export class ChargesService {
     };
 
     const delayMs = charge.chargeDate.getTime() - Date.now();
-    await this.chargesQueue.add("send-charge-email", emailData, {
+    await this.chargesQueue.add('send-charge-email', emailData, {
       delay: Math.max(delayMs, 0),
       attempts: 5,
-      backoff: { type: "exponential", delay: 10_000 },
+      backoff: { type: 'exponential', delay: 10_000 },
       removeOnComplete: true,
     });
   }

@@ -1,9 +1,9 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { BullModule } from "@nestjs/bullmq";
-import { ChargesModule } from "./charges/charges.module";
-import { PrismaModule } from "./prisma/prisma.module";
-import { UsersModule } from "./users/users.module";
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { ChargesModule } from './charges/charges.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -13,10 +13,10 @@ import { UsersModule } from "./users/users.module";
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
         connection: {
-          host: cfg.get("REDIS_HOST", "localhost"),
-          port: cfg.get<number>("REDIS_PORT", 6379),
-          password: cfg.get<string>("REDIS_PASS"),
-          db: cfg.get<number>("REDIS_DB", 0),
+          host: cfg.get('REDIS_HOST', 'localhost'),
+          port: cfg.get<number>('REDIS_PORT', 6379),
+          password: cfg.get<string>('REDIS_PASS'),
+          db: cfg.get<number>('REDIS_DB', 0),
         },
       }),
     }),

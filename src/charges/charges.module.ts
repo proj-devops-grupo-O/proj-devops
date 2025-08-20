@@ -5,11 +5,9 @@ import { ChargeProcessor } from './charge.processor';
 import { BullModule } from '@nestjs/bullmq';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: 'charges' }),
-  ],
+  imports: [BullModule.registerQueue({ name: 'charges' })],
   controllers: [ChargesController],
   providers: [ChargesService, ChargeProcessor],
   exports: [ChargesService],
 })
-export class ChargesModule {} 
+export class ChargesModule {}

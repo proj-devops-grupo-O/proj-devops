@@ -3,12 +3,12 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
-} from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import * as bcrypt from "bcrypt";
-import { UserType } from "@prisma/client";
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
+import { UserType } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +22,7 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new ConflictException("Email already in use");
+      throw new ConflictException('Email already in use');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -32,10 +32,11 @@ export class UsersService {
         email,
         password: hashedPassword,
         name,
-        userType: userType || "VIEWER",
+        userType: userType || 'VIEWER',
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
     return result;
   }
@@ -44,6 +45,7 @@ export class UsersService {
     const users = await this.prisma.user.findMany();
 
     return users.map((user) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     });
@@ -55,9 +57,10 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException('User not found');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
   }
@@ -76,6 +79,7 @@ export class UsersService {
       data,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = updatedUser;
     return result;
   }
@@ -84,7 +88,7 @@ export class UsersService {
     const user = await this.findOne(id);
 
     if (user.userType === UserType.ADMIN) {
-      throw new ForbiddenException("Cannot delete admin users");
+      throw new ForbiddenException('Cannot delete admin users');
     }
 
     await this.prisma.user.delete({
