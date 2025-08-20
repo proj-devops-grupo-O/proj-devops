@@ -13,12 +13,16 @@ export class ChargeProcessor extends WorkerHost {
   }
 
   async process(job: Job<EmailJobData, any, string>): Promise<any> {
-    this.logger.log(`Processing job: ${job.name} | ID: ${job.id} | Attempt: ${job.attemptsMade + 1}`);
-    
+    this.logger.log(
+      `Processing job: ${job.name} | ID: ${job.id} | Attempt: ${job.attemptsMade + 1}`,
+    );
+
     if (job.name === 'send-charge-email') {
       const data = job.data;
-      this.logger.log(`Sending email to: ${data.customerEmail} | Invoice: ${data.chargeId}`);
-      
+      this.logger.log(
+        `Sending email to: ${data.customerEmail} | Invoice: ${data.chargeId}`,
+      );
+
       try {
         this.logger.log('Building email template...');
         this.logger.log('Sending email via SMTP...');
@@ -33,4 +37,4 @@ export class ChargeProcessor extends WorkerHost {
       this.logger.warn(`Unknown job: ${job.name}`);
     }
   }
-} 
+}
