@@ -53,3 +53,5 @@ dump.rdb
 
 # Test artifacts
 junit.xml 
+
+.secrets
