@@ -80,6 +80,7 @@ export class UsersController {
   @ApiOperation({ summary: "Delete user" })
   @ApiResponse({ status: 204, description: "User deleted successfully" })
   @ApiResponse({ status: 404, description: "User not found" })
+  @ApiResponse({ status: 403, description: "Cannot delete admin users" })
   async remove(@Param("id") id: string) {
     await this.usersService.remove(id);
   }

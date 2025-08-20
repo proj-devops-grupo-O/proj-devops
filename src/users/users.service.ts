@@ -2,11 +2,13 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import * as bcrypt from "bcrypt";
+import { UserType } from "@prisma/client";
 
 @Injectable()
 export class UsersService {
@@ -79,7 +81,11 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    const user = await this.findOne(id);
+
+    if (user.userType === UserType.ADMIN) {
+      throw new ForbiddenException("Cannot delete admin users");
+    }
 
     await this.prisma.user.delete({
       where: { id },
