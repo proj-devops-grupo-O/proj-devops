@@ -24,8 +24,6 @@ async function bootstrap() {
     .setVersion("1.0")
     .addTag("users")
     .addTag("charges")
-    .addTag("subscriptions")
-    .addTag("plans")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
