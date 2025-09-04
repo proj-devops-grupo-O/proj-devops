@@ -2,7 +2,7 @@
 
 services:
   app:
-    image: ${DOCKER_USERNAME}/subscription-manager:main
+    image: ${DOCKER_USERNAME}/subscription-manager:${IMAGE_TAG:-develop}
     restart: always
     ports:
       - "3000:3000"
