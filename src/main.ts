@@ -16,11 +16,6 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.get('/health', (req, res) => {
-    
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
   app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()
@@ -29,6 +24,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('users')
     .addTag('charges')
+    .addTag('health')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
