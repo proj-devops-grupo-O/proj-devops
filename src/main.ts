@@ -36,6 +36,7 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
+    .addTag('health')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
