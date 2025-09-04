@@ -8,6 +8,7 @@ import {
   Query,
   HttpStatus,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { ChargesService } from './charges.service';
 import { CreateChargeDto } from './dto/create-charge.dto';
@@ -18,13 +19,19 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { ALL_ROLES, USER_ROLES } from '@/enums/userRoles.enum';
+import { AuthGuard } from '@/auth/auth.guard';
+import { RoleGuard } from '@/auth/role.guard';
 
 @ApiTags('charges')
+@ApiBearerAuth('JWT-auth')
 @Controller('charges')
 export class ChargesController {
   constructor(private readonly chargesService: ChargesService) {}
 
+  @UseGuards(AuthGuard, RoleGuard([USER_ROLES.ADMIN]))
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create new charge' })
@@ -41,6 +48,7 @@ export class ChargesController {
     };
   }
 
+  @UseGuards(AuthGuard, RoleGuard(ALL_ROLES))
   @Get()
   @ApiOperation({ summary: 'Find all charges' })
   @ApiResponse({ status: 200, description: 'Returns all charges' })
@@ -79,6 +87,7 @@ export class ChargesController {
     };
   }
 
+  @UseGuards(AuthGuard, RoleGuard(ALL_ROLES))
   @Get(':id')
   @ApiOperation({ summary: 'Find charge by ID' })
   @ApiResponse({ status: 200, description: 'Returns a charge by ID' })
@@ -93,6 +102,7 @@ export class ChargesController {
     };
   }
 
+  @UseGuards(AuthGuard, RoleGuard([USER_ROLES.ADMIN]))
   @Patch(':id')
   @ApiOperation({ summary: 'Update charge' })
   @ApiResponse({ status: 200, description: 'Charge updated successfully' })
