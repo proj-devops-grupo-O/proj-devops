@@ -16,6 +16,11 @@ async function bootstrap() {
 
   app.enableCors();
 
+  app.get('/health', (req, res) => {
+    
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()

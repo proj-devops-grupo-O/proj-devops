@@ -1,0 +1,66 @@
+name: Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+    branches: [ main ]
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to production server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USERNAME }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        script: |
+          cd /opt/subscription-manager
+          
+          # Set environment variable for docker-compose
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          
+          # Create backup
+          echo "Creating backup..."
+          docker compose ps -q | xargs -r docker stop
+          
+          # Pull latest main image (tagged by CI workflow)
+          echo "Pulling latest image..."
+          docker pull ${{ secrets.DOCKER_USERNAME }}/subscription-manager:main
+          
+          # Deploy
+          echo "Starting services..."
+          docker compose up -d
+          
+          # Wait for services to be ready
+          echo "Waiting for services to start..."
+          sleep 20
+          
+          # Health check with retry logic
+          echo "Performing health check..."
+          max_attempts=30
+          attempt=0
+          
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              echo "✅ Application is healthy!"
+              exit 0
+            fi
+            
+            echo "Attempt $((attempt + 1))/$max_attempts: Application not ready yet..."
+            sleep 5
+            attempt=$((attempt + 1))
+          done
+          
+          echo "❌ Application failed health check"
+          docker compose logs app
+          exit 1
