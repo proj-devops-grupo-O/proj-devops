@@ -30,14 +30,14 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         name,
         userType: userType || 'VIEWER',
       },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...result } = user;
+    const { passwordHash: _, ...result } = user;
     return result;
   }
 
@@ -46,7 +46,7 @@ export class UsersService {
 
     return users.map((user) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...result } = user;
+      const { passwordHash, ...result } = user;
       return result;
     });
   }
@@ -61,7 +61,7 @@ export class UsersService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user;
+    const { passwordHash, ...result } = user;
     return result;
   }
 
@@ -80,7 +80,7 @@ export class UsersService {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = updatedUser;
+    const { passwordHash, ...result } = updatedUser;
     return result;
   }
 
@@ -94,5 +94,18 @@ export class UsersService {
     await this.prisma.user.delete({
       where: { id },
     });
+  }
+
+  async findUserByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return user;
   }
 }

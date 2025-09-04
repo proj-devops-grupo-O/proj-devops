@@ -24,6 +24,18 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('users')
     .addTag('charges')
+    .addTag('auth')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .addTag('health')
     .build();
 

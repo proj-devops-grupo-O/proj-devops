@@ -25,12 +25,12 @@ model Customer {
 }
 
 model Plan {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   price       Float
   recurrence  String // "monthly", "yearly"
   description String?
-  active      Boolean @default(true)
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -41,14 +41,14 @@ model Plan {
 }
 
 model ActiveSubscription {
-  id           String   @id @default(cuid())
-  customerId   String
-  planId       String
-  startDate    DateTime
-  status       String   // "active", "cancelled", "suspended"
-  nextBilling  DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  customerId  String
+  planId      String
+  startDate   DateTime
+  status      String // "active", "cancelled", "suspended"
+  nextBilling DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relationships
   customer Customer @relation(fields: [customerId], references: [id])
@@ -63,7 +63,7 @@ model Charge {
   subscriptionId String
   chargeDate     DateTime
   amount         Float
-  status         String   // "pending", "paid", "overdue", "cancelled"
+  status         String // "pending", "paid", "overdue", "cancelled"
   description    String?
   attempts       Int      @default(0)
   createdAt      DateTime @default(now())
@@ -80,8 +80,8 @@ model Payment {
   id            String   @id @default(cuid())
   chargeId      String
   paymentDate   DateTime
-  method        String   // "card", "pix", "bank_slip"
-  status        String   // "approved", "declined", "processing"
+  method        String // "card", "pix", "bank_slip"
+  status        String // "approved", "declined", "processing"
   amountPaid    Float
   transactionId String?
   createdAt     DateTime @default(now())
@@ -99,13 +99,13 @@ enum UserType {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  userType  UserType @default(VIEWER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  userType     UserType @default(VIEWER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("users")
 }
