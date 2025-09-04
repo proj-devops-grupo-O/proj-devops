@@ -5,17 +5,27 @@ on:
     workflows: ["CI Pipeline"]
     types:
       - completed
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'develop') }}
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_sha }}
+
+    - name: Debug workflow information
+      run: |
+        echo "Workflow that triggered this: ${{ github.event.workflow_run.name }}"
+        echo "Branch: ${{ github.event.workflow_run.head_branch }}"
+        echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+        echo "SHA: ${{ github.event.workflow_run.head_sha }}"
+        echo "Deploying from branch: ${{ github.event.workflow_run.head_branch }}"
 
     - name: Deploy to production server
       uses: appleboy/ssh-action@v1.0.3
@@ -33,9 +43,10 @@ jobs:
           echo "Creating backup..."
           docker compose ps -q | xargs -r docker stop
           
-          # Pull latest main image (tagged by CI workflow)
-          echo "Pulling latest image..."
-          docker pull ${{ secrets.DOCKER_USERNAME }}/subscription-manager:main
+          # Pull latest image based on branch (tagged by CI workflow)
+          BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+          echo "Pulling latest image for branch: $BRANCH_NAME"
+          docker pull ${{ secrets.DOCKER_USERNAME }}/subscription-manager:$BRANCH_NAME
           
           # Deploy
           echo "Starting services..."
