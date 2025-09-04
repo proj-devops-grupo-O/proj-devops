@@ -2,9 +2,7 @@
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME}/subscription-manager:main
     restart: always
     ports:
       - "3000:3000"
@@ -22,8 +20,6 @@ services:
       - redis
     networks:
       - app-network
-    volumes:
-      - ./prisma:/app/prisma
 
   postgres:
     image: postgres:15-alpine
