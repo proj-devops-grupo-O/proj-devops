@@ -9,12 +9,19 @@ import { UsersModule } from '../users/users.module';
   imports: [
     JwtModule.registerAsync({
       global: true,
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<number>('JWT_EXPIRATION_TIME'),
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const expirationTime = parseInt(
+          configService.get('JWT_EXPIRATION_TIME') || '3600',
+          10,
+        );
+
+        return {
+          secret: configService.get<string>('JWT_SECRET'),
+          signOptions: {
+            expiresIn: expirationTime,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     UsersModule,
