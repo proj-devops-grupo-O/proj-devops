@@ -5,7 +5,7 @@ import { compareSync as bcryptCompareSync } from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { USER_ROLES } from 'src/enums/userRoles.enum';
 import { WrongPasswordLoginError } from './errors/WrongPassword.login.error';
-import { UsersService } from '@/users/users.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
