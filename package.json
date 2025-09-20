@@ -18,6 +18,9 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "types:check": "tsc --pretty --noEmit --project ./tsconfig.json",
+    "pre:commit": "lint-staged",
+    "pre:push": "concurrently --names types,lint 'npm run types:check' 'npm run lint --max-warnings 0'",
     "prepare": "husky"
   },
   "dependencies": {
@@ -87,5 +90,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+   "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --cache --fix"
+    ]
   }
 }
