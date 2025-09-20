@@ -24,7 +24,7 @@ import { AuthGuard } from '@/auth/auth.guard';
 import { RoleGuard } from '@/auth/role.guard';
 import { ALL_ROLES, USER_ROLES } from '@/enums/userRoles.enum';
 
-@ApiTags('active-subscriptions')
+@ApiTags('active subscriptions')
 @ApiBearerAuth('JWT-auth')
 @Controller('active-subscriptions')
 export class ActiveSubscriptionController {
