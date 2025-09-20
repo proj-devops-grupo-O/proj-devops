@@ -45,8 +45,13 @@ export class CustomerService {
         where: { id },
         data,
       });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2002'
+      ) {
         throw new ConflictException('Email already in use');
       }
       throw error;
