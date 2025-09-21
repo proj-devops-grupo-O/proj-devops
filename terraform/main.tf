@@ -19,37 +19,9 @@ data "aws_key_pair" "deployer" {
   key_name = var.key_pair_name
 }
 
-resource "aws_security_group" "app_sg" {
-  name        = "${local.name_prefix}-sg-"
-  description = "Security group for app instance"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress {
-    description = "Allow app port"
-    from_port   = var.app_port
-    to_port     = var.app_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = var.ssh_ingress_cidrs
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${local.name_prefix}-sg"
-  }
+data "aws_security_group" "app_sg" {
+  name   = "${local.name_prefix}-sg-"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_ami" "ubuntu" {
@@ -92,7 +64,7 @@ resource "aws_instance" "app" {
   # Usa a chave existente (data source)
   key_name                    = data.aws_key_pair.deployer.key_name
   subnet_id                   = data.aws_subnets.default_public.ids[0]
-  vpc_security_group_ids      = [aws_security_group.app_sg.id]
+  vpc_security_group_ids      = [data.aws_security_group.app_sg.id]  # << trocado p/ data source
   associate_public_ip_address = true
 
   user_data = local.user_data
