@@ -113,7 +113,3 @@ output "ssh_command" {
   value       = "ssh -i <your_private_key> ubuntu@${aws_instance.app.public_ip}"
   description = "SSH command to access the instance"
 }
-
- 
-
-

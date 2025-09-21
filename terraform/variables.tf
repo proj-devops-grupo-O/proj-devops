@@ -44,5 +44,3 @@ variable "ssh_public_key" {
   description = "Public SSH key material for the EC2 key pair (e.g., ssh-ed25519 ... or ssh-rsa ...)"
   type        = string
 }
-
-
