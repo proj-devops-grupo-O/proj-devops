@@ -2,13 +2,9 @@ name: CI - App Build & Test
 
 on:
   push:
-    branches:
-      - '**'
+    branches: [ develop, main ]
   pull_request:
-    branches:
-      - develop
-      - main
-  workflow_dispatch:
+    branches: [ develop, main ]
 
 jobs:
   test:
@@ -111,8 +107,6 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: test
-    env:
-      DOCKER_OWNER: ${{ secrets.DOCKER_USERNAME || github.repository_owner }}
     
     steps:
     - name: Checkout code
@@ -122,31 +116,23 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Log in to Docker Hub
-      if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+      if: github.event_name != 'pull_request'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Compute dynamic image tag (branch-YYYYMMDD-HHMMSS)
-      run: |
-        BRANCH="$GITHUB_REF_NAME"
-        SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g' | sed -E 's/^-+|-+$//g' | cut -c1-128)
-        TS=$(date -u +%Y%m%d-%H%M%S)
-        echo "BRANCH_TIMESTAMP_TAG=${SLUG}-${TS}" >> $GITHUB_ENV
 
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
       with:
         images: |
-          ${{ env.DOCKER_OWNER }}/subscription-manager
+          ${{ secrets.DOCKER_USERNAME }}/subscription-manager
         tags: |
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
-          type=raw,value=${{ env.BRANCH_TIMESTAMP_TAG }}
           type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push Docker image
@@ -154,9 +140,8 @@ jobs:
       with:
         context: .
         platforms: linux/amd64,linux/arm64
-        push: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+        push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-
