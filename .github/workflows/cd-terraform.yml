@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-2            # ajuste se quiser
+  AWS_REGION: us-east-2
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "0"
 
@@ -18,7 +18,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     permissions:
-      contents: read   # não usamos OIDC aqui; credenciais vêm de secrets
+      contents: read   # credenciais via secrets
 
     steps:
       - name: Checkout
@@ -29,9 +29,8 @@ jobs:
         with:
           terraform_version: 1.9.5
 
-      # Configura AWS com ACCESS KEY / SECRET (de secrets)
+      # Configura AWS com ACCESS KEY / SECRET (dos secrets)
       - name: Configure AWS Credentials
-        # Em PR de fork não existem secrets; evita falhar
         if: (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.fork == false)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -51,6 +50,24 @@ jobs:
         working-directory: terraform
         run: terraform validate
 
+      # Importa SG existente se já houver (evita erro de duplicado)
+      - name: Import existing SG if present
+        working-directory: terraform
+        run: |
+          set -e
+          VPC_ID="vpc-0a40bb32a3b11d6c7"
+          SG_NAME="subscription-manager-prod-sg"
+          SG_ID=$(aws ec2 describe-security-groups \
+            --filters Name=group-name,Values=${SG_NAME} Name=vpc-id,Values=${VPC_ID} \
+            --query 'SecurityGroups[0].GroupId' --output text || true)
+
+          if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
+            echo "Found existing SG: $SG_ID - importing into Terraform state"
+            terraform import -input=false -no-color aws_security_group.app_sg "$SG_ID" || true
+          else
+            echo "No existing SG found. Proceeding without import."
+          fi
+
       # ---------- PLAN em PR (mesmo repo; sem forks) ----------
       - name: Terraform Plan (PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
@@ -61,7 +78,6 @@ jobs:
           TF_VAR_instance_type: t3.micro
         run: terraform plan -no-color -out=tfplan
 
-      # (Opcional) Mensagem amigável quando o PR é fork
       - name: Skip plan for forked PR (no secrets)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
         run: echo "Skipping plan on forked PR (no access to repo secrets)."
@@ -74,7 +90,6 @@ jobs:
           TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
           TF_VAR_aws_region: ${{ env.AWS_REGION }}
           TF_VAR_instance_type: t3.micro
-          # Adicione aqui outras variáveis como TF_VAR_APP_IMAGE, etc. se existirem
         run: |
           terraform plan -no-color -out=tfplan
           terraform apply -auto-approve tfplan
