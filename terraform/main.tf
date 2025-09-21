@@ -20,7 +20,7 @@ resource "aws_key_pair" "deployer" {
 }
 
 resource "aws_security_group" "app_sg" {
-  name        = "${local.name_prefix}-sg"
+  name        = "${local.name_prefix}-sg-"
   description = "Security group for app instance"
   vpc_id      = data.aws_vpc.default.id
 
