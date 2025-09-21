@@ -1,5 +1,3 @@
-
-
 services:
   app:
     image: ${DOCKER_USERNAME:-gabrieldnlc}/subscription-manager:${IMAGE_TAG:-develop}
@@ -34,12 +32,15 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # init.sql só roda na PRIMEIRA inicialização do volume.
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d subscription_manager"]
+      # use 127.0.0.1 para evitar DNS e dê tempo ao bootstrap
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U $${POSTGRES_USER} -d $${POSTGRES_DB} || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 40s
     networks:
       - app-network
 
@@ -51,10 +52,11 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG >/dev/null"]
       interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 10
+      start_period: 5s
     networks:
       - app-network
 
@@ -64,4 +66,4 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge 
+    driver: bridge
