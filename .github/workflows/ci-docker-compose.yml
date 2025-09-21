@@ -1,4 +1,4 @@
-name: Docker Compose Validation
+name: CI - Docker Compose Validation
 
 on:
   push:
