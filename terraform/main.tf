@@ -87,8 +87,8 @@ locals {
 }
 
 resource "aws_instance" "app" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
   # Usa a chave existente (data source)
   key_name                    = data.aws_key_pair.deployer.key_name
   subnet_id                   = data.aws_subnets.default_public.ids[0]
