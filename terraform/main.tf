@@ -64,7 +64,7 @@ resource "aws_instance" "app" {
   # Usa a chave existente (data source)
   key_name                    = data.aws_key_pair.deployer.key_name
   subnet_id                   = data.aws_subnets.default_public.ids[0]
-  vpc_security_group_ids      = [data.aws_security_group.app_sg.id]  # << trocado p/ data source
+  vpc_security_group_ids      = [data.aws_security_group.app_sg.id] # << trocado p/ data source
   associate_public_ip_address = true
 
   user_data = local.user_data
