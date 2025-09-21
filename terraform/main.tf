@@ -14,9 +14,9 @@ data "aws_subnets" "default_public" {
   }
 }
 
-resource "aws_key_pair" "deployer" {
-  key_name   = var.key_pair_name
-  public_key = var.ssh_public_key
+# REUTILIZA chave já existente (NÃO cria)
+data "aws_key_pair" "deployer" {
+  key_name = var.key_pair_name
 }
 
 resource "aws_security_group" "app_sg" {
@@ -89,7 +89,8 @@ locals {
 resource "aws_instance" "app" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
-  key_name                    = aws_key_pair.deployer.key_name
+  # Usa a chave existente (data source)
+  key_name                    = data.aws_key_pair.deployer.key_name
   subnet_id                   = data.aws_subnets.default_public.ids[0]
   vpc_security_group_ids      = [aws_security_group.app_sg.id]
   associate_public_ip_address = true
@@ -101,8 +102,6 @@ resource "aws_instance" "app" {
     Environment = var.environment
   }
 }
-
-# Allocate a static Elastic IP (free when associated) for stable SSH/Deployments
 
 output "instance_public_ip" {
   value       = aws_instance.app.public_ip
