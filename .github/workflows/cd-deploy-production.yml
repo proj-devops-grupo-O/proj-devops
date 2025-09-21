@@ -53,7 +53,9 @@ jobs:
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
           script: |
-            mkdir -p /opt/subscription-manager
+            sudo mkdir -p /opt/subscription-manager
+            # dá posse da pasta ao usuário que está logando via SSH
+            sudo chown -R $USER:$USER /opt/subscription-manager
 
       - name: Copy compose and configs to server
         uses: appleboy/scp-action@v0.1.7
@@ -65,7 +67,7 @@ jobs:
           source: "./docker-compose.yml,./init.sql"
           target: /opt/subscription-manager
           overwrite: true
-          rm: true
+
 
       - name: Deploy to production server
         uses: appleboy/ssh-action@v1.0.3
