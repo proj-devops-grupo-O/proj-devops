@@ -31,6 +31,23 @@ jobs:
           echo "Event:     ${{ github.event.workflow_run.event }}"
           echo "SHA:       ${{ github.event.workflow_run.head_sha }}"
           echo "Conclusion:${{ github.event.workflow_run.conclusion }}"
+          echo "Repo files:" && ls -la
+
+      - name: Preflight – check files exist
+        run: |
+          test -f ./docker-compose.yml || { echo "Faltou ./docker-compose.yml"; exit 1; }
+          test -f ./init.sql || { echo "Faltou ./init.sql"; exit 1; }
+
+      # garante que o target exista antes do SCP
+      - name: Prepare target dir on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USERNAME }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script: |
+            mkdir -p /opt/subscription-manager
 
       - name: Copy compose and configs to server
         uses: appleboy/scp-action@v0.1.7
@@ -38,10 +55,13 @@ jobs:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USERNAME }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
           source: |
-            docker-compose.yml
-            init.sql
+            ./docker-compose.yml
+            ./init.sql
           target: /opt/subscription-manager
+          overwrite: true
+          rm: true
 
       - name: Deploy to production server
         uses: appleboy/ssh-action@v1.0.3
@@ -49,6 +69,7 @@ jobs:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USERNAME }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
           script: |
             set -euo pipefail
             cd /opt/subscription-manager
@@ -57,21 +78,27 @@ jobs:
             IMAGE="${{ secrets.DOCKER_USERNAME }}/subscription-manager:${BRANCH}"
             echo "Using image: ${IMAGE}"
 
+            # opcional: login no registry se a imagem for privada
+            if [ -n "${{ secrets.DOCKER_PASSWORD || '' }}" ]; then
+              echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            fi
+
+            # sanity checks
+            command -v docker >/dev/null || { echo "Docker não encontrado"; exit 1; }
+            docker compose version || { echo "docker compose plugin não encontrado"; exit 1; }
+
             echo "Stopping running services (if any)..."
-            docker compose ps -q | xargs -r docker stop
+            docker compose ps -q | xargs -r docker stop || true
 
             echo "Pulling latest image..."
             docker pull "${IMAGE}"
 
             echo "Starting services..."
-            docker compose up -d --build
+            docker compose up -d
 
             echo "Waiting for services..."
-            sleep 20
-
-            echo "Health check..."
             for i in $(seq 1 30); do
-              if curl -f http://localhost:3000/health >/dev/null 2>&1; then
+              if curl -fsS http://localhost:3000/health >/dev/null; then
                 echo "✅ Healthy"
                 exit 0
               fi
@@ -81,5 +108,5 @@ jobs:
 
             echo "❌ Failed health check"
             docker compose ps
-            docker compose logs app
+            docker compose logs app || true
             exit 1
