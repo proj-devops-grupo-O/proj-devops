@@ -19,7 +19,7 @@ variable "aws_region" {
 variable "instance_type" {
   description = "EC2 instance type (free tier eligible: t2.micro/t3.micro)"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "ssh_ingress_cidrs" {
