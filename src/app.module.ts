@@ -3,6 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { ChargesModule } from './charges/charges.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { HealthController } from './health/health.controller';
+import { CustomerModule } from './customer/customer.module';
+import { PlanModule } from './plan/plan.module';
+import { ActiveSubscriptionModule } from './active-subscription/active-subscription.module';
 
 @Module({
   imports: [
@@ -22,8 +28,13 @@ import { PrismaModule } from './prisma/prisma.module';
 
     PrismaModule,
     ChargesModule,
+    UsersModule,
+    AuthModule,
+    CustomerModule,
+    PlanModule,
+    ActiveSubscriptionModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [],
 })
 export class AppModule {}

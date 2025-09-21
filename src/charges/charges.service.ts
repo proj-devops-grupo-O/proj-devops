@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChargeDto } from './dto/create-charge.dto';
 import { UpdateChargeDto } from './dto/update-charge.dto';
@@ -138,24 +142,20 @@ export class ChargesService {
 
   private async scheduleChargeEmail(charge: any) {
     const emailData: EmailJobData = {
-      chargeId       : charge.id,
-      customerEmail  : charge.subscription.customer.email,
-      customerName   : charge.subscription.customer.name,
-      amount         : charge.amount,
-      dueDate        : charge.chargeDate.toISOString(),
-      planName       : charge.subscription.plan.name,
+      chargeId: charge.id,
+      customerEmail: charge.subscription.customer.email,
+      customerName: charge.subscription.customer.name,
+      amount: charge.amount,
+      dueDate: charge.chargeDate.toISOString(),
+      planName: charge.subscription.plan.name,
     };
 
     const delayMs = charge.chargeDate.getTime() - Date.now();
-    await this.chargesQueue.add(
-      'send-charge-email',
-      emailData,
-      {
-        delay          : Math.max(delayMs, 0),
-        attempts       : 5,
-        backoff        : { type: 'exponential', delay: 10_000 },
-        removeOnComplete: true,
-      },
-    );
+    await this.chargesQueue.add('send-charge-email', emailData, {
+      delay: Math.max(delayMs, 0),
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 10_000 },
+      removeOnComplete: true,
+    });
   }
-} 
+}

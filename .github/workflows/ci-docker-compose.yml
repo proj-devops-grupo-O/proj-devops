@@ -1,0 +1,86 @@
+name: CI - Docker Compose Validation
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.dockerignore'
+  pull_request: 
+    branches: [develop, main]
+    paths:
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.dockerignore'
+
+jobs:
+  validate-compose:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start services
+        run: docker compose up -d
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          IMAGE_TAG: ${{ github.ref_name }}
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to be ready..."
+          sleep 10
+
+      - name: Check service status
+        run: docker compose ps
+
+      - name: Test application health
+        run: |
+          max_attempts=30
+          attempt=0
+
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Application is healthy!"
+              exit 0
+            fi
+            
+            echo "Attempt $((attempt + 1))/$max_attempts: Application not ready yet..."
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
+          echo "Application failed to start properly"
+          docker compose logs app
+          exit 1
+
+      - name: Check PostgreSQL connection
+        run: |
+          docker compose exec -T postgres pg_isready -U postgres
+
+      - name: Check Redis connection
+        run: |
+          docker compose exec -T redis redis-cli ping
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "=== App Logs ==="
+          docker compose logs app
+          echo "=== PostgreSQL Logs ==="
+          docker compose logs postgres
+          echo "=== Redis Logs ==="
+          docker compose logs redis
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v

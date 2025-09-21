@@ -1,0 +1,80 @@
+name: CD - Terraform Plan & Apply
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths: [ 'terraform/**' ]
+  pull_request:
+    branches: [ develop, main ]
+    paths: [ 'terraform/**' ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-2            # ajuste se quiser
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "0"
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # não usamos OIDC aqui; credenciais vêm de secrets
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      # Configura AWS com ACCESS KEY / SECRET (de secrets)
+      - name: Configure AWS Credentials
+        # Em PR de fork não existem secrets; evita falhar
+        if: (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.fork == false)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Format
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      # ---------- PLAN em PR (mesmo repo; sem forks) ----------
+      - name: Terraform Plan (PR)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        working-directory: terraform
+        env:
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+          TF_VAR_instance_type: t3.micro
+        run: terraform plan -no-color -out=tfplan
+
+      # (Opcional) Mensagem amigável quando o PR é fork
+      - name: Skip plan for forked PR (no secrets)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+        run: echo "Skipping plan on forked PR (no access to repo secrets)."
+
+      # ---------- PLAN + APPLY em push (develop/main) ----------
+      - name: Terraform Plan and Apply (push)
+        if: github.event_name == 'push'
+        working-directory: terraform
+        env:
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+          TF_VAR_instance_type: t3.micro
+          # Adicione aqui outras variáveis como TF_VAR_APP_IMAGE, etc. se existirem
+        run: |
+          terraform plan -no-color -out=tfplan
+          terraform apply -auto-approve tfplan

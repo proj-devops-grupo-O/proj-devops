@@ -1,1 +1,1 @@
-export * from './email-job-data.interface'; 
+export * from './email-job-data.interface';
