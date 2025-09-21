@@ -43,13 +43,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`Server running on port ${port}`);
-  console.log(`API available at: http://localhost:${port}/api`);
-  console.log(
-    `API Documentation available at: http://localhost:${port}/api/docs`,
-  );
+  console.log(`API available at: http://0.0.0.0:${port}/api`);
+  console.log(`Docs available at: http://0.0.0.0:${port}/api/docs`);
+  console.log(`Health available at: http://0.0.0.0:${port}/api/health`);
 }
 
 bootstrap();
