@@ -38,6 +38,12 @@ jobs:
           test -f ./docker-compose.yml || { echo "Faltou ./docker-compose.yml"; exit 1; }
           test -f ./init.sql || { echo "Faltou ./init.sql"; exit 1; }
 
+      - name: Debug repo files
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 2 -type f
+
       # garante que o target exista antes do SCP
       - name: Prepare target dir on server
         uses: appleboy/ssh-action@v1.0.3
