@@ -49,7 +49,7 @@ jobs:
           attempt=0
 
           while [ $attempt -lt $max_attempts ]; do
-            if curl -f http://localhost:3000/api/charges > /dev/null 2>&1; then
+            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
               echo "Application is healthy!"
               exit 0
             fi
