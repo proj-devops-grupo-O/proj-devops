@@ -2,7 +2,7 @@
 
 services:
   app:
-    image: ${DOCKER_USERNAME}/subscription-manager:${IMAGE_TAG:-develop}
+    image: ${DOCKER_USERNAME:-igoramf}/subscription-manager:${IMAGE_TAG:-develop}
     restart: always
     ports:
       - "3000:3000"
