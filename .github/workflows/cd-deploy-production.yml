@@ -102,9 +102,11 @@ jobs:
             echo "Starting services..."
             sudo -n docker compose up -d
 
+            sleep 10
+
             echo "Waiting for services..."
             for i in $(seq 1 30); do
-              if curl -fsS http://localhost:3000/health >/dev/null; then
+              if curl -fsS http://localhost:3000/api/health >/dev/null; then
                 echo "✅ Healthy"
                 exit 0
               fi
