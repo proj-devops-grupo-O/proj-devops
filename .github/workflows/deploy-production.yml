@@ -29,6 +29,17 @@ jobs:
         echo "SHA: ${{ github.event.workflow_run.head_sha }}"
         echo "Deploying from branch: ${{ github.event.workflow_run.head_branch }}"
 
+    - name: Copy compose and configs to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USERNAME }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        source: |
+          docker-compose.yml
+          init.sql
+        target: /opt/subscription-manager
+
     - name: Deploy to production server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -40,6 +51,7 @@ jobs:
           
           # Set environment variable for docker-compose
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          export IMAGE_TAG=${{ github.event.workflow_run.head_branch }}
           
           # Create backup
           echo "Creating backup..."
