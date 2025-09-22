@@ -18,6 +18,7 @@ jobs:
   validate-compose:
     name: Validate Docker Compose
     runs-on: ubuntu-latest
+    needs: docker
 
     steps:
       - name: Checkout code
