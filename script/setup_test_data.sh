@@ -8,7 +8,8 @@ set -e  # Exit on any error
 echo "🚀 Starting test data creation..."
 
 # Configuration
-API_BASE_URL="http://localhost:3000/api"
+API_BASE_URL="http://18.219.10.15:3000/api"
+#http://18.219.10.15:3000
 
 # Admin user for authentication (needed for admin-only endpoints)
 ADMIN_USER_DATA='{
@@ -18,13 +19,6 @@ ADMIN_USER_DATA='{
   "userType": "ADMIN"
 }'
 
-# Test user (viewer) - commented out as not required for basic functionality
-# USER_DATA='{
-#   "email": "user@test.com",
-#   "password": "password123",
-#   "name": "Usuário Teste",
-#   "userType": "VIEWER"
-# }'
 
 CUSTOMER_DATA='{
   "name": "Igor Falcão",

@@ -1,0 +1,1 @@
+ssh -i ~/.ssh/deployer ubuntu@18.219.10.15
