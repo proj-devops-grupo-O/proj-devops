@@ -67,14 +67,6 @@ echo ""
 echo "Stop: Ctrl+C"
 echo "======================================"
 
-# Monitor services
 while true; do
     sleep 5
-    
-    if ! docker compose -f docker-compose.dev.yml ps | grep -q "app.*running"; then
-        echo "Application stopped unexpectedly"
-        break
-    fi
 done
-
-cleanup 
